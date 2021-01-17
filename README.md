@@ -33,3 +33,8 @@ This style of script
 allows you to subscribe to all spectate events, all stat changes and all user inputs: https://github.com/RLBot/RLBot/blob/master/src/test/python/agents/script/socket_script.py
 
 
+If you want to add custom script support, then you need a `.cfg` file for the 
+custom script to be detected. The custom script should be named like this: `_mapname.cfg` where the mapname matches whats before the `.upk` for the map.
+
+The .cfg file will direct RLBot to the location of the script. This script can be any python3.7 code. There are some helper classes that can be useful as shown
+in the samples described above.
