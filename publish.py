@@ -29,6 +29,21 @@ def get_args():
     return parser.parse_args()
 
 
+def warn_about_local_replacements(static_items):
+    """Given the list of maps that are not being updated
+    we check if they exist locally and are goign to be
+    replaced by versions available in a release"""
+    locally_available = find_locally_existing(static_items)
+    if locally_available:
+        print("The following local files will be replaced:")
+        for item in locally_available:
+            print("\t" + str(item["path"]))
+        user_choice = input("Is that okay? (y/N)")
+        if user_choice.capitalize() != "Y":
+            print("Aborting...")
+            sys.exit(2)
+
+
 def update_index_revisions(map_paths: List[str], filepath):
     with open(filepath) as fh:
         data = json.load(fh)
@@ -58,7 +73,7 @@ def push_index(message, filepath):
 
 def push_release(updated_maps, updated_index):
     revision = updated_index["revision"]
-    note = "Maps updated in release: "
+    note = "Maps updated in release: \n"
     for map_path in updated_maps:
         note += f"- {map_path} \n"
 
@@ -72,8 +87,8 @@ def push_release(updated_maps, updated_index):
         "--notes",
         note,
     ]
-    for map_path in updated_maps:
-        cmd.append(map_path)
+    for item in updated_index["maps"]:
+        cmd.append(str(item["full_path"]))
 
     run(cmd, check=True)
 
@@ -86,16 +101,7 @@ if __name__ == "__main__":
     maps_data = index_data["maps"]
 
     static_items = list(filter(lambda i: i["path"] not in args.map_paths, maps_data))
-
-    locally_available = find_locally_existing(static_items)
-    if locally_available:
-        print("The following local files will be replaced:")
-        for item in locally_available:
-            print("\t" + str(item["path"]))
-        user_choice = input("Is that okay? (y/N)")
-        if user_choice.capitalize() != "Y":
-            print("Aborting...")
-            sys.exit(2)
+    warn_about_local_replacements(static_items)
 
     if args.dry:
         print("Skipping further processing")
