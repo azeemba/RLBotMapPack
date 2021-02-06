@@ -9,10 +9,13 @@ privileges on the repo
 import argparse
 import json
 import sys
+import shutil
+import os
+
+from pathlib import Path
 from subprocess import run
 from typing import List
-
-from util import parse_index, find_locally_existing, fetch_latest_maps, add_full_paths
+from tempfile import TemporaryDirectory
 
 
 def get_args():
@@ -93,6 +96,56 @@ def push_release(updated_maps, updated_index):
     run(cmd, check=True)
 
 
+def parse_index(filepath, root=None):
+    with open(filepath) as fh:
+        data = json.load(fh)
+
+    return add_full_paths(data, root)
+
+
+def add_full_paths(index_data, root=None):
+    if root is None:
+        root = Path.cwd()
+
+    for item in index_data["maps"]:
+        item["full_path"] = root / Path(item["path"])
+
+    return index_data
+
+
+def find_locally_existing(index_items):
+    """
+    Returns items that already exist locally
+    """
+
+    def exists(item):
+        return item["full_path"].exists()
+
+    return list(filter(exists, index_items))
+
+
+def fetch_latest_maps(index_items, revision):
+    """
+    [{path, revision}] is the input
+    For each one, download from the latest release
+    """
+    if len(index_items) < 1:
+        return
+
+    release = f"v{revision}"
+    with TemporaryDirectory() as dirname:
+        cmd = ["gh", "release", "download", release, "--dir", dirname]
+        cmd.extend(["-p", "*.upk", "-p", "*.udk"])
+
+        run(cmd, check=True)
+
+        for item in index_items:
+            basename = item["full_path"].name
+            print("Replacing: ", basename)
+            downloaded_path = Path(dirname, basename)
+            shutil.copy2(downloaded_path, item["full_path"])
+
+
 if __name__ == "__main__":
     args = get_args()
 
@@ -107,7 +160,7 @@ if __name__ == "__main__":
         print("Skipping further processing")
         sys.exit(0)
 
-    fetch_latest_maps(static_items)
+    fetch_latest_maps(static_items, index_data["revision"])
 
     # Now we can assume the only changes are updated maps
     updated_index = update_index_revisions(args.map_paths, index_file)
