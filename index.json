@@ -1,13 +1,13 @@
 {
-    "revision": 3,
+    "revision": 4,
     "maps": [
         {
             "path": "Simplicity/Simplicity.upk",
             "revision": 3
         },
         {
-            "path": "challenge_failed.upk",
-            "revision": 1
+            "path": "_challenge_failed.upk",
+            "revision": 2
         }
     ]
 }
