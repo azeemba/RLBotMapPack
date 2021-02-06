@@ -4,6 +4,10 @@
         {
             "path": "Simplicity/Simplicity.upk",
             "revision": 3
+        },
+        {
+            "path": "challenge_failed.upk",
+            "revision": 1
         }
     ]
 }
