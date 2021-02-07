@@ -135,7 +135,7 @@ def fetch_latest_maps(index_items, revision):
     release = f"v{revision}"
     with TemporaryDirectory() as dirname:
         cmd = ["gh", "release", "download", release, "--dir", dirname]
-        cmd.extend(["-p", "*.upk", "-p", "*.udk"])
+        cmd.extend(["-p", "*.upk"])
 
         run(cmd, check=True)
 
